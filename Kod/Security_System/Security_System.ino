@@ -6,6 +6,27 @@
 #include "uRTCLib.h"
 uRTCLib rtc;
 
+#define pin1 PB13
+#define pin2 PB8
+#define pin3 PB5
+#define pin4 PB4
+#define pin5 PB3
+#define pin6 PB15
+#define pin7 PB14
+
+
+#define One (digitalRead(pin2)&&digitalRead(pin3))
+#define Two (digitalRead(pin1)&&digitalRead(pin2))
+#define Three (digitalRead(pin5)&&digitalRead(pin2))
+#define Four (digitalRead(pin3)&&digitalRead(pin7))
+#define Five (digitalRead(pin7)&&digitalRead(pin1))
+#define Six (digitalRead(pin5)&&digitalRead(pin7))
+#define Seven (digitalRead(pin3)&&digitalRead(pin6))
+#define Eight (digitalRead(pin1)&&digitalRead(pin6))
+#define Nine (digitalRead(pin5)&&digitalRead(pin6))
+#define Zero (digitalRead(pin1)&&digitalRead(pin4))
+#define Star (digitalRead(pin3)&&digitalRead(pin4))
+#define Square (digitalRead(pin5)&&digitalRead(pin4))
 SemaphoreHandle_t xSemaphore=NULL;
 
 unsigned int pos;
@@ -20,14 +41,33 @@ struct LarmSchedule {
 };
  struct LarmSchedule *Workday = (struct LarmSchedule *)&WeekSchedule[0];
  struct LarmSchedule *Weekend = (struct LarmSchedule *)&WeekSchedule[1];
+
+static void KeypadTask(void *pvParameters) {
+  for(;;){
+        //if(!One){Serial.println("=1=");}
+        //if(!Two){Serial.println("=2=");}
+        //if(!Three){Serial.println("=3=");}
+        //if(!Four){Serial.println("=4=");}
+        if(!Five){Serial.println("=5=");}
+        if(!Six){Serial.println("=6=");}
+        //if(!Seven){Serial.println("=7=");}
+        //if(!Eight){Serial.println("=8=");}
+        //if(!Nine){Serial.println("=9=");}
+        //if(!Zero){Serial.println("=0=");}
+        //if(!Star){Serial.println("=*=");}
+        //if(!Square){Serial.println("=#=");}
+  vTaskDelay(1000);
+  
+  }
+}
 static void BuzzerTask(void *pvParameters) {
   for(;;){
         if(PIR){
-              digitalWrite(PB13, HIGH);
+              //digitalWrite(PB13, HIGH);
               Serial.println("PIIIIIIIP");
         }
         else{
-          digitalWrite(PB13, LOW);
+          //digitalWrite(PB13, LOW);
           Serial.println("FAIL");
         }
         vTaskDelay(1000);
@@ -41,13 +81,6 @@ static void SensorTask(void *pvParameters) {
                           if((Workday->StartTime)<RealTimeMin && (Workday->EndTime)>RealTimeMin){
                                 //larm av
                                 Serial.println("Larm Av ja");
-                                Serial.println(digitalRead(PB14));
-                                Serial.println(digitalRead(PB15));
-                                Serial.println(digitalRead(PB3));
-                                Serial.println(digitalRead(PB4));
-                                Serial.println(digitalRead(PB5));
-                                Serial.println(digitalRead(PB8));
-                                //Serial.println(digitalRead(PB9));
                                 Serial.println(PIR);Serial.println(PIR);
                           }
                           else{
@@ -88,16 +121,16 @@ static void ClockTask(void *pvParameters) {
 }
 
 void setup() {
-    pinMode(PB14, INPUT);
-    pinMode(PB15, INPUT);
-    pinMode(PB3, INPUT);
-    pinMode(PB4, INPUT);
-    pinMode(PB5, INPUT);
-    pinMode(PB8, INPUT);
-    //pinMode(PB9, INPUT);
+    pinMode(pin7, INPUT);   // pin7
+    pinMode(pin6, INPUT);   // pin6
+    pinMode(pin5, INPUT);    // pin5
+    pinMode(pin4, INPUT);    // pin4
+    pinMode(pin3, INPUT);    // pin3
+    pinMode(pin2, INPUT);    // pin2
+    pinMode(pin1, INPUT);  // pin1
     
     pinMode(PB12, INPUT);
-    pinMode(PB13, OUTPUT);
+    //pinMode(PB13, OUTPUT);
     Serial.begin(115200);
 
       for(pos = 0; pos < 1000; pos++) {
@@ -132,6 +165,12 @@ void setup() {
                 NULL);
    xTaskCreate(ClockTask,
                 "RTC",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY + 2,
+                NULL);
+   xTaskCreate(KeypadTask,
+                "Keypad",
                 configMINIMAL_STACK_SIZE,
                 NULL,
                 tskIDLE_PRIORITY + 2,
